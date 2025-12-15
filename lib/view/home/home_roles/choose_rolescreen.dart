@@ -58,7 +58,7 @@ class ChooseRoleScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RenteeMain(),
+                          builder: (context) => RenteeMainView(),
                         ),
                       );
                     },

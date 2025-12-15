@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/device_model.dart';
-import '../../services/rentee_service.dart';
+import '../services/listing_service.dart';
 
 class RenterHomeViewModel extends ChangeNotifier {
   final ListingService _service = ListingService();

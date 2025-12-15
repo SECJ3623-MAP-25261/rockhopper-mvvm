@@ -1,10 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:pinjamtech_app/models/device_model.dart';
+import '../../../models/device_model.dart';
 
-class ListingService {
+class RenteeHomeService {
   final SupabaseClient supabase = Supabase.instance.client;
 
-  /// Fetch all devices created by the current rentee
   Future<List<Device>> fetchMyListings() async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return [];
@@ -14,12 +13,27 @@ class ListingService {
         .select()
         .eq('user_id', userId);
 
-    return (response as List<dynamic>)
-        .map((item) => Device.fromMap(item))
-        .toList();
+    return (response as List<dynamic>).map((item) {
+      return Device(
+        id: item['id'],
+        name: item['name'],
+        brand: item['brand'] ?? '',
+        pricePerDay: (item['price_per_day'] ?? 0).toDouble(),
+        imageUrl: item['image_url'] ?? '',
+        isAvailable: item['is_available'] ?? true,
+        maxRentalDays: item['max_rental_days'] ?? 0,
+        condition: item['condition'] ?? '',
+        description: item['description'] ?? '',
+        category: item['category'] ?? '',
+        bookedSlots: (item['booked_slots'] as List<dynamic>?)
+                ?.map((e) => DateTime.parse(e))
+                .toList() ??
+            [],
+        deposit: (item['deposit'] as num?)?.toDouble(),
+      );
+    }).toList();
   }
 
-  /// Delete a listing created by the current rentee
   Future<void> deleteListing(String deviceId) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
@@ -29,30 +43,5 @@ class ListingService {
         .delete()
         .eq('id', deviceId)
         .eq('user_id', userId);
-  }
-
-  /// Fetch all available devices (for renters)
-  Future<List<Device>> fetchAvailableDevices() async {
-    final response = await supabase
-        .from('listings')
-        .select()
-        .eq('is_available', true);
-
-    return (response as List<dynamic>)
-        .map((item) => Device.fromMap(item))
-        .toList();
-  }
-
-  /// Optional: Fetch devices by a specific user (rentee)
-  Future<List<Device>> fetchDevicesByUser(String? userId) async {
-    if (userId == null) return [];
-    final response = await supabase
-        .from('listings')
-        .select()
-        .eq('user_id', userId);
-
-    return (response as List<dynamic>)
-        .map((item) => Device.fromMap(item))
-        .toList();
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../models/device_model.dart';
 import 'package:pinjamtech_app/services/rentee_service.dart';
+import 'package:pinjamtech_app/services/listing_service.dart';
 
 
+//rentee_home_viewmodel
 class RenteeHomeViewModel extends ChangeNotifier {
   final RenteeHomeService _service = RenteeHomeService();
 
@@ -45,7 +47,7 @@ class RenteeHomeViewModel extends ChangeNotifier {
 
 
 
-
+//rentee viewmodel
 class RenteeViewModel extends ChangeNotifier {
   final ListingService _service = ListingService();
 
@@ -56,7 +58,7 @@ class RenteeViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    devices = await _service.fetchDevicesByUser();
+    devices = await _service.fetchDeviceByUser();
 
     isLoading = false;
     notifyListeners();
