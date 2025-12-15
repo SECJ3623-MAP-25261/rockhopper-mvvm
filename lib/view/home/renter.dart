@@ -19,7 +19,7 @@ class _RenterMainState extends State<RenterMain> {
   int currentIndex = 0;
 
   final pages = const [
-    RenterHome(),
+    RenterHomeView(),
     RentingCartScreen(),
     NotificationsScreen(cartItems: []),
     RenterProfile(),

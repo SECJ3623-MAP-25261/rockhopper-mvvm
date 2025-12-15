@@ -11,9 +11,9 @@ class Device {
   final String description;
   final String category;
   final List<DateTime> bookedSlots;
-  final double? deposit; // Add if needed
-  final String? specifications; // Add if needed
-  final String? location; // Add if needed
+  final double? deposit; // optional
+  final String? specifications; // optional
+  final String? location; // optional
 
   Device({
     required this.id,
@@ -32,7 +32,7 @@ class Device {
     this.location,
   });
 
-  // Add copyWith method for easier updates
+  // copyWith for easy updates
   Device copyWith({
     String? id,
     String? name,
@@ -66,4 +66,26 @@ class Device {
       location: location ?? this.location,
     );
   }
+}
+
+// Extension outside the class
+extension DeviceMapper on Device {
+  static Device fromMap(Map<String, dynamic> item) => Device(
+        id: item['id'].toString(),
+        name: item['name'] ?? '',
+        brand: item['brand'] ?? '',
+        pricePerDay: (item['price_per_day'] ?? 0).toDouble(),
+        imageUrl: item['image_url'] ?? '',
+        isAvailable: item['is_available'] ?? true,
+        maxRentalDays: item['max_rental_days'] ?? 0,
+        condition: item['condition'] ?? '',
+        description: item['description'] ?? '',
+        category: item['category'] ?? '',
+        bookedSlots: (item['booked_slots'] as List<dynamic>? ?? [])
+            .map((e) => DateTime.parse(e))
+            .toList(),
+        deposit: (item['deposit'] as num?)?.toDouble(),
+        specifications: item['specifications'] ?? '',
+        location: item['location'] ?? '',
+      );
 }

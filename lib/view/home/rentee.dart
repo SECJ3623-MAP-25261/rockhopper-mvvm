@@ -1,59 +1,53 @@
-//rentee.dart
 import 'package:flutter/material.dart';
-import '../home/home_roles/role_switch_bottom_sheet.dart';
+import 'package:provider/provider.dart';
+import 'package:pinjamtech_app/view_model/rentee_viewmodel.dart';
 import '../home/home_roles/rentee_home.dart';
-import '../home/home_roles/role_navbar.dart';
 import '../profile/rentee_profile.dart';
 import '../listings/createlist.dart';
-import '../home/renter.dart';    // important
+import '../home/renter.dart';
+import '../home/home_roles/role_navbar.dart';
 
-class RenteeMain extends StatefulWidget {
-  const RenteeMain({super.key});
-
-  @override
-  State<RenteeMain> createState() => _RenteeMainState();
-}
-
-class _RenteeMainState extends State<RenteeMain> {
-  int currentIndex = 0;
-  
-  final pages = const [
-    RenteeHome(),
-    CreateList(),
-    RenteeProfile(),
-  ];
-
-  void _switchToRenter() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RenterMain(),
-      ),
-    );
-  }
+class RenteeMainView extends StatelessWidget {
+  const RenteeMainView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => RenteeMainViewModel(),
+      child: const _RenteeMainUI(),
+    );
+  }
+}
+
+class _RenteeMainUI extends StatelessWidget {
+  const _RenteeMainUI();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<RenteeMainViewModel>();
+
+    final pages = const [
+      RenteeHomeView(),
+      CreateList(),
+      RenteeProfile(),
+    ];
+
     return Scaffold(
-      body: pages[currentIndex],
+      body: pages[vm.currentIndex],
       bottomNavigationBar: CustomBottomNav(
-        currentIndex: currentIndex,
-        onTap: (i) => setState(() => currentIndex = i),
+        currentIndex: vm.currentIndex,
+        onTap: vm.changeTab,
         currentRole: "rentee",
-        onRoleSwitch: _switchToRenter,
+        onRoleSwitch: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const RenterMain()),
+          );
+        },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle),
-            label: "Create",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: "Create"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );

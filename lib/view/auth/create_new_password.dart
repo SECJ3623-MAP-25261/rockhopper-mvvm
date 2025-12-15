@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -200,3 +200,68 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     );
   }
 } 
+*/
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+
+class CreateNewPasswordScreen extends StatefulWidget {
+  final String email;
+  const CreateNewPasswordScreen({super.key, required this.email});
+
+  @override
+  State<CreateNewPasswordScreen> createState() =>
+      _CreateNewPasswordScreenState();
+}
+
+class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
+  final _token = TextEditingController();
+  final _password = TextEditingController();
+
+  Future<void> _reset() async {
+    final authVM = context.read<AuthViewModel>();
+
+    try {
+      await authVM.resetPassword(
+        email: widget.email,
+        token: _token.text,
+        newPassword: _password.text,
+      );
+
+      if (!mounted) return;
+      Navigator.popUntil(context, (r) => r.isFirst);
+    } catch (_) {
+      _show(authVM.errorMessage ?? "Reset failed");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authVM = context.watch<AuthViewModel>();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Reset Password")),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            TextField(controller: _token, decoration: const InputDecoration(labelText: "Token")),
+            TextField(controller: _password, decoration: const InputDecoration(labelText: "New Password"), obscureText: true),
+            ElevatedButton(
+              onPressed: authVM.isLoading ? null : _reset,
+              child: authVM.isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text("Update Password"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _show(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
+}

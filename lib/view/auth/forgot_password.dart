@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'create_new_password.dart';
@@ -175,5 +175,73 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         backgroundColor: primaryBlue,
       ),
     );
+  }
+}
+*/
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import 'create_new_password.dart';
+
+class ForgotPassword extends StatefulWidget {
+  const ForgotPassword({super.key});
+
+  @override
+  State<ForgotPassword> createState() => _ForgotPasswordState();
+}
+
+class _ForgotPasswordState extends State<ForgotPassword> {
+  final _email = TextEditingController();
+
+  Future<void> _sendToken() async {
+    final authVM = context.read<AuthViewModel>();
+
+    try {
+      await authVM.sendResetToken(_email.text);
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              CreateNewPasswordScreen(email: _email.text),
+        ),
+      );
+    } catch (_) {
+      _show(authVM.errorMessage ?? "Failed to send token");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authVM = context.watch<AuthViewModel>();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Forgot Password")),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            TextField(
+              controller: _email,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
+            ElevatedButton(
+              onPressed: authVM.isLoading ? null : _sendToken,
+              child: authVM.isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text("Send Token"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _show(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 }
