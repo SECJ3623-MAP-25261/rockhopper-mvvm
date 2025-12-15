@@ -3,10 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'view/auth/welcome_screen.dart';
-
 // VIEWMODELS
 import 'package:pinjamtech_app/view_model/auth_viewmodel.dart';
-import 'package:pinjamtech_app/view_model/listing_viewmodel.dart';
+import 'package:pinjamtech_app/view_model/createlist_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +20,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        ChangeNotifierProvider(create: (_) => CreateListViewModel()),
+        ChangeNotifierProvider(create: (_) => CreateListingViewModel()),
       ],
       child: const MyApp(),
     ),

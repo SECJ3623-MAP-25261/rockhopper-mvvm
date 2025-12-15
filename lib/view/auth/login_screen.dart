@@ -261,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen> {
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/auth_viewmodel.dart';
+import 'package:pinjamtech_app/view_model/auth_viewmodel.dart';
 import 'forgot_password.dart';
 import 'otp_screen.dart';
 import '../home/preferencefilter.dart';

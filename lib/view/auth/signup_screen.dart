@@ -348,7 +348,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../viewmodels/auth_viewmodel.dart';
+import 'package:pinjamtech_app/view_model/auth_viewmodel.dart';
 import 'login_screen.dart';
 
 class SignUpScreen extends StatefulWidget {

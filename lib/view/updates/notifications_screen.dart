@@ -519,6 +519,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         endDate: DateTime.now(),
         brand: '',
         maxRentalDays: 0,
+        location: '',
       ),
     );
 

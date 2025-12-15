@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:pinjamtech_app/view_model/rentee_viewmodel.dart';
+import 'package:pinjamtech_app/view_model/rentee_main_viewmodel.dart';
 import '../home/home_roles/rentee_home.dart';
 import '../profile/rentee_profile.dart';
 import '../listings/createlist.dart';
@@ -27,7 +27,7 @@ class _RenteeMainUI extends StatelessWidget {
     final vm = context.watch<RenteeMainViewModel>();
 
     final pages = const [
-      RenteeHomeView(),
+      RenteeHome(),
       CreateList(),
       RenteeProfile(),
     ];

@@ -1,6 +1,4 @@
-//cart_item.dart
-
-// models/cart_item.dart (updated)
+// cart_item_fixed.dart
 class CartItem {
   final String id;
   final String name;
@@ -13,6 +11,7 @@ class CartItem {
   final String category;
   final String brand;
   final int maxRentalDays;
+  final String location; // ✅ Device location
   bool isSelected;
 
   CartItem({
@@ -27,11 +26,11 @@ class CartItem {
     required this.category,
     required this.brand,
     required this.maxRentalDays,
+    required this.location,
     this.isSelected = true,
   });
 
   int get rentalDays => endDate.difference(startDate).inDays + 1;
-
   double get totalPrice => price * rentalDays;
 
   Map<String, dynamic> toMap() {
@@ -41,15 +40,15 @@ class CartItem {
       'price': price,
       'image': image,
       'description': description,
-      'startDate': startDate.toIso8601String(),
-      'endDate': endDate.toIso8601String(),
-      'rentalDays': rentalDays,
+      'start_date': startDate.toIso8601String(),
+      'end_date': endDate.toIso8601String(),
       'condition': condition,
       'category': category,
       'brand': brand,
-      'maxRentalDays': maxRentalDays,
-      'isSelected': isSelected,
-      'totalPrice': totalPrice,
+      'max_rental_days': maxRentalDays,
+      'location': location,
+      'is_selected': isSelected,
+      'total_price': totalPrice,
     };
   }
 
@@ -57,16 +56,17 @@ class CartItem {
     return CartItem(
       id: map['id'],
       name: map['name'],
-      price: map['price'],
+      price: (map['price'] as num).toDouble(),
       image: map['image'],
       description: map['description'],
-      startDate: DateTime.parse(map['startDate']),
-      endDate: DateTime.parse(map['endDate']),
+      startDate: DateTime.parse(map['start_date']),
+      endDate: DateTime.parse(map['end_date']),
       condition: map['condition'],
       category: map['category'],
       brand: map['brand'],
-      maxRentalDays: map['maxRentalDays'],
-      isSelected: map['isSelected'] ?? true,
+      maxRentalDays: map['max_rental_days'],
+      location: map['location'],
+      isSelected: map['is_selected'] ?? true,
     );
   }
 }

@@ -1,407 +1,202 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Add this
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:pinjamtech_app/view_model/editprofile_viewmodel.dart';
+import 'package:image_picker/image_picker.dart';
 
-class EditProfile extends StatefulWidget {
+class EditProfile extends StatelessWidget {
   const EditProfile({super.key});
 
-  @override
-  State<EditProfile> createState() => _EditProfileState();
-}
-
-class _EditProfileState extends State<EditProfile> {
-  final _formKey = GlobalKey<FormState>();
-  final SupabaseClient _supabase = Supabase.instance.client;
-  
-  // Consistent colors
-  static const Color primaryBlue = Color(0xFF2196F3);
+  // Theme colors
   static const Color primaryGreen = Color(0xFF4CAF50);
   static const Color textDark = Color(0xFF212121);
   static const Color textLight = Color(0xFF757575);
-  static const Color background = Color(0xFFF5F5F5);
-
-  late final TextEditingController _fullNameController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _bioController;
-
-  String _selectedGender = 'Prefer not to say';
-  String? _authPhone;
-  bool _isLoading = true;
-
-  final List<String> _genders = [
-    'Male',
-    'Female',
-    'Other',
-    'Prefer not to say'
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _fullNameController = TextEditingController();
-    _phoneController = TextEditingController();
-    _bioController = TextEditingController();
-    _loadProfileData();
-  }
-
-  Future<void> _loadProfileData() async {
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) return;
-
-      _authPhone = user.userMetadata?['phone']?.toString();
-
-      final response = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .maybeSingle();
-
-      if (response != null) {
-        _fullNameController.text = response['full_name'] ?? '';
-        _phoneController.text = response['phone'] ?? _authPhone ?? '';
-        _bioController.text = response['bio'] ?? '';
-        _selectedGender = response['gender'] ?? 'Prefer not to say';
-      }
-
-      setState(() => _isLoading = false);
-    } catch (e) {
-      print("Error loading profile: $e");
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _updateProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception('Not authenticated');
-
-      await _supabase.auth.updateUser(
-        UserAttributes(
-          data: {
-            'full_name': _fullNameController.text.trim(),
-            'phone': _phoneController.text.trim(),
-          },
-        ),
-      );
-
-      await _supabase.from('profiles').update({
-        'full_name': _fullNameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'gender': _selectedGender,
-        'bio': _bioController.text.trim(),
-        'updated_at': DateTime.now().toIso8601String()
-      }).eq('id', user.id);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Profile updated successfully",
-              style: GoogleFonts.poppins(),
-            ),
-            backgroundColor: primaryGreen,
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      print("Update error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Error updating profile: $e",
-            style: GoogleFonts.poppins(),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-
-    setState(() => _isLoading = false);
-  }
-
-  void _showImagePickerOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildImageOption(
-              icon: Icons.camera_alt,
-              label: 'Camera',
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Add camera upload logic
-              },
-            ),
-            _buildImageOption(
-              icon: Icons.photo_library,
-              label: 'Gallery',
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Add gallery upload logic
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: primaryBlue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(icon, size: 35, color: primaryBlue),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  static const Color backgroundGrey = Color(0xFFF5F5F5);
 
   @override
   Widget build(BuildContext context) {
-    final user = _supabase.auth.currentUser;
-    final email = user?.email ?? "No email";
+    return ChangeNotifierProvider(
+      create: (_) => EditProfileViewModel(),
+      child: const _EditProfileUI(),
+    );
+  }
+}
+
+class _EditProfileUI extends StatelessWidget {
+  const _EditProfileUI();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<EditProfileViewModel>();
 
     return Scaffold(
       appBar: AppBar(
+        title: Text("Update Profile", style: GoogleFonts.poppins(color: EditProfile.textDark, fontWeight: FontWeight.w600)),
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          "Update Profile",
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: textDark,
-          ),
-        ),
       ),
-      backgroundColor: background,
-      body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
-              ),
-            )
+      backgroundColor: EditProfile.backgroundGrey,
+      body: vm.isLoading
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Profile photo section
-                    Container(
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 30),
-                          GestureDetector(
-                            onTap: _showImagePickerOptions,
-                            child: CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.grey[200],
-                              child: Icon(
-                                Icons.person,
-                                size: 50,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            "Tap to change photo",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: textLight,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Profile fields
-                    Container(
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          _buildProfileField(
-                            label: "Full Name",
-                            value: _fullNameController.text,
-                            onTap: () =>
-                                _showEditDialog("Full Name", _fullNameController),
-                          ),
-                          const Divider(height: 1, indent: 20),
-                          _buildProfileField(
-                            label: "Email",
-                            value: email,
-                            onTap: () {},
-                            isEditable: false,
-                          ),
-                          const Divider(height: 1, indent: 20),
-                          _buildProfileField(
-                            label: "Phone",
-                            value: _phoneController.text,
-                            onTap: () => _showEditDialog("Phone", _phoneController),
-                          ),
-                          const Divider(height: 1, indent: 20),
-                          _buildProfileField(
-                            label: "Bio",
-                            value: _bioController.text,
-                            onTap: () => _showEditDialog("Bio", _bioController),
-                          ),
-                          const Divider(height: 1, indent: 20),
-                          // Gender selector
-                          InkWell(
-                            onTap: () => _showGenderDialog(),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 18),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Gender",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      color: textDark,
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        _selectedGender,
-                                        style: GoogleFonts.poppins(
-                                          color: textLight,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Icon(
-                                        Icons.arrow_forward_ios,
-                                        size: 16,
-                                        color: Colors.grey[400],
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Save Button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _updateProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryBlue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: Text(
-                            "Save Changes",
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: [
+                 _buildImageSection(context, vm),
+                  const SizedBox(height: 20),
+                  _buildFormSection(context, vm),
+                  const SizedBox(height: 30),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            await vm.updateProfile();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Profile updated successfully")),
+                            );
+                            Navigator.pop(context);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error: $e")),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: EditProfile.primaryGreen,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
+                        child: Text("Save Changes", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                       ),
                     ),
-
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
     );
   }
+Widget _buildImageSection(BuildContext context, EditProfileViewModel vm) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        children: [
+          Text('Profile Photo', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 20),
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.grey[200],
+                child: vm.selectedImage == null
+                    ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                    : ClipOval(child: Image.file(vm.selectedImage!, fit: BoxFit.cover, width: 100, height: 100)),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: () => _showImagePickerOptions(context, vm),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: EditProfile.primaryGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('Tap to change photo', style: GoogleFonts.poppins(fontSize: 12, color: EditProfile.textLight)),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildProfileField({
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-    bool isEditable = true,
-  }) {
+  void _showImagePickerOptions(BuildContext context, EditProfileViewModel vm) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildImageOption(context, Icons.camera_alt, 'Camera', ImageSource.camera, vm),
+            _buildImageOption(context, Icons.photo_library, 'Gallery', ImageSource.gallery, vm),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageOption(BuildContext context, IconData icon, String label, ImageSource source, EditProfileViewModel vm) {
     return InkWell(
-      onTap: isEditable ? onTap : null,
+      onTap: () {
+        Navigator.pop(context);
+        vm.selectImage(source);
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(15)),
+            child: Icon(icon, size: 35, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: GoogleFonts.poppins(fontSize: 14)),
+        ],
+      ),
+    );
+  }
+  Widget _buildFormSection(BuildContext context, EditProfileViewModel vm) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        children: [
+          _buildProfileField("Full Name", vm.fullNameController.text, () => _showEditDialog(context, "Full Name", vm.fullNameController)),
+          const Divider(height: 1, indent: 20),
+          _buildProfileField("Phone", vm.phoneController.text, () => _showEditDialog(context, "Phone", vm.phoneController)),
+          const Divider(height: 1, indent: 20),
+          _buildProfileField("Bio", vm.bioController.text, () => _showEditDialog(context, "Bio", vm.bioController)),
+          const Divider(height: 1, indent: 20),
+          _buildGenderField(context, vm),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileField(String label, String value, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                color: textDark,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            Text(label, style: GoogleFonts.poppins(fontSize: 16, color: EditProfile.textDark)),
             Row(
               children: [
-                Text(
-                  value.isEmpty ? "Not set" : value,
-                  style: GoogleFonts.poppins(
-                    color: value.isEmpty ? textLight : textDark,
-                  ),
-                ),
-                if (isEditable) ...[
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey[400],
-                  ),
-                ],
+                Text(value.isEmpty ? "Not set" : value, style: GoogleFonts.poppins(color: value.isEmpty ? EditProfile.textLight : EditProfile.textDark)),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
               ],
             ),
           ],
@@ -410,83 +205,67 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 
-  void _showEditDialog(String fieldName, TextEditingController controller) {
+  Widget _buildGenderField(BuildContext context, EditProfileViewModel vm) {
+    return InkWell(
+      onTap: () => _showGenderDialog(context, vm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Gender", style: GoogleFonts.poppins(fontSize: 16, color: EditProfile.textDark)),
+            Row(
+              children: [
+                Text(vm.selectedGender, style: GoogleFonts.poppins(color: EditProfile.textLight)),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, String fieldName, TextEditingController controller) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          "Edit $fieldName",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text("Edit $fieldName", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
         content: TextField(
           controller: controller,
-          style: GoogleFonts.poppins(),
           decoration: InputDecoration(
             labelText: fieldName,
-            labelStyle: GoogleFonts.poppins(),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "Cancel",
-              style: GoogleFonts.poppins(
-                color: textLight,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {});
-              Navigator.pop(context);
-            },
-            child: Text(
-              "Save",
-              style: GoogleFonts.poppins(
-                color: primaryBlue,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel", style: GoogleFonts.poppins(color: EditProfile.textLight))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("Save", style: GoogleFonts.poppins(color: EditProfile.primaryGreen, fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
 
-  void _showGenderDialog() {
+  void _showGenderDialog(BuildContext context, EditProfileViewModel vm) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          "Select Gender",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text("Select Gender", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: _genders.length,
+            itemCount: vm.genders.length,
             itemBuilder: (context, index) {
-              final gender = _genders[index];
+              final gender = vm.genders[index];
               return RadioListTile(
-                title: Text(
-                  gender,
-                  style: GoogleFonts.poppins(),
-                ),
+                title: Text(gender, style: GoogleFonts.poppins()),
                 value: gender,
-                groupValue: _selectedGender,
-                activeColor: primaryBlue,
+                groupValue: vm.selectedGender,
+                activeColor: EditProfile.primaryGreen,
                 onChanged: (value) {
-                  setState(() => _selectedGender = value!);
+                  vm.setGender(value!);
                   Navigator.pop(context);
                 },
               );
@@ -495,13 +274,5 @@ class _EditProfileState extends State<EditProfile> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _fullNameController.dispose();
-    _phoneController.dispose();
-    _bioController.dispose();
-    super.dispose();
   }
 }

@@ -63,7 +63,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             const SizedBox(height: 6),
 
             Text(
-              "RM ${device["pricePerDay"]}/day",
+              "RM ${device["pricePerDay"] ?? device["price_per_day"]}/day",
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -79,7 +79,34 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
+
+            // LOCATION
+            if (device["location"] != null && device["location"].toString().isNotEmpty) ...[
+              Text("Pickup Location", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 20, color: Colors.blue[700]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        device["location"],
+                        style: GoogleFonts.poppins(fontSize: 14, color: Colors.blue[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
 
             // QUANTITY SELECTOR
             Text("Quantity", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
@@ -106,7 +133,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ],
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             // DATE PICKER
             Text("Rental Duration", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
@@ -201,7 +228,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         return;
       }
 
-      //  Get or create cart
+      // Get or create cart
       final cartResponse = await Supabase.instance.client
           .from('carts')
           .select('id')
@@ -221,19 +248,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         cartId = newCart['id'];
       }
 
-      //  Insert into cart_items
+      // Insert into cart_items
       await Supabase.instance.client.from('cart_items').insert({
         'cart_id': cartId,
         'listing_id': widget.device['id'],
         'start_date': startDate!.toIso8601String(),
         'end_date': endDate!.toIso8601String(),
+        'quantity': quantity,
+        'location': widget.device['location'], // ✅ Include location
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Added to Cart")),
       );
 
-      //  Navigate to RentingCartScreen
+      // Navigate to RentingCartScreen
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const RentingCartScreen()),

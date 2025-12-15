@@ -181,7 +181,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/auth_viewmodel.dart';
+import 'package:pinjamtech_app/view_model/auth_viewmodel.dart';
 import 'create_new_password.dart';
 
 class ForgotPassword extends StatefulWidget {
