@@ -28,13 +28,6 @@ class AuthService {
     );
   }
 
-  // ---------------- OTP LOGIN (EMAIL CODE) tak jadi ----------------
-  Future<void> sendOtp(String email) async {
-    return await supabase.auth.signInWithOtp(
-      email: email,
-      emailRedirectTo: 'io.supabase.flutter://signin-callback/',
-    );
-  }
 
   // ---------------- SEND PASSWORD RESET EMAIL ----------------
   Future<void> sendPasswordResetEmail(String email, {String? redirectTo}) async {

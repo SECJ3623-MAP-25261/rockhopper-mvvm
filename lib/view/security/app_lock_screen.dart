@@ -13,10 +13,11 @@ class _AppLockScreenState extends State<AppLockScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Automatically trigger biometric auth
-      context.read<AppLockViewModel>().unlockApp();
-    });
+    _authenticate();
+  }
+
+  Future<void> _authenticate() async {
+    await context.read<AppLockViewModel>().unlockApp();
   }
 
   @override
@@ -24,7 +25,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
     return Scaffold(
       body: Center(
         child: ElevatedButton(
-          onPressed: () => context.read<AppLockViewModel>().unlockApp(),
+          onPressed: _authenticate,
           child: const Text('Unlock with Biometrics'),
         ),
       ),

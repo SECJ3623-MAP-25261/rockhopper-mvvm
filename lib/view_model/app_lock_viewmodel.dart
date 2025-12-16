@@ -19,7 +19,7 @@ class AppLockViewModel extends ChangeNotifier {
     bool success = await biometricService.authenticate();
     if (success) {
       _isLocked = false;
-      print("App unlocked via biometrics");
+      print("App unlocked");
       notifyListeners();
     }
   }

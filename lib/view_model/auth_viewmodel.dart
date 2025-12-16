@@ -23,30 +23,37 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   /* -----------------------------
-   LOGIN
+  LOGIN
   ----------------------------- */
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
-    _setLoading(true);
-    _setError(null);
+Future<void> login({
+  required String email,
+  required String password,
+}) async {
+  _setLoading(true);
+  _setError(null);
 
-    try {
-      await _authService.signInWithPassword(
-        email.trim(),
-        password.trim(),
-      );
-    } catch (e) {
-      _setError(e.toString());
-      rethrow;
-    } finally {
-      _setLoading(false);
+  try {
+    final res = await _authService.signInWithPassword(email.trim(), password.trim());
+
+    // Check if login succeeded
+    if (res.user == null || res.session == null) {
+      _setError("Invalid email or password");
+      return;
     }
+
+    // Login successful
+  } on AuthException catch (e) {
+    _setError(e.message);
+  } catch (e) {
+    _setError("Unexpected error: $e");
+  } finally {
+    _setLoading(false);
   }
+}
+
 
   /* -----------------------------
-   SIGN UP
+  SIGN UP
   ----------------------------- */
   Future<void> signUp({
     required String email,
@@ -71,7 +78,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   /* -----------------------------
-   FORGOT PASSWORD (SEND TOKEN)
+  FORGOT PASSWORD (SEND TOKEN)
   ----------------------------- */
   Future<void> sendResetToken(String email) async {
     _setLoading(true);
@@ -88,7 +95,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   /* -----------------------------
-   RESET PASSWORD (VERIFY TOKEN)
+  RESET PASSWORD (VERIFY TOKEN)
   ----------------------------- */
   Future<void> resetPassword({
     required String email,
