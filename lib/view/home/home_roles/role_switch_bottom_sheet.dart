@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../rentee.dart';
+import '../renter.dart';
 
 class RoleSwitchBottomSheet extends StatelessWidget {
   final String currentRole;
@@ -21,7 +23,8 @@ class RoleSwitchBottomSheet extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
 
-          _roleItem(context, "rentee", "Rentee", Icons.shopping_bag),
+          _roleItem(context, "rentee", "Rentee", Icons.shopping_bag)
+          ,
           _roleItem(context, "renter", "Renter", Icons.person_search),
         ],
       ),
@@ -38,6 +41,14 @@ class RoleSwitchBottomSheet extends StatelessWidget {
       onTap: () {
         onSwitchRole(role);
         Navigator.pop(context);
+        //navigate to renter home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                role == "rentee" ? const RenteeMainView() : const RenterMain(),
+          ),
+        );
       },
     );
   }
