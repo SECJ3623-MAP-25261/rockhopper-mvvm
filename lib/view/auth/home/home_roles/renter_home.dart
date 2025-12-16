@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../models/device_model.dart';
+import '../../../../models/device_model.dart';
 import '../message/chat_list_screen.dart';
 import '../search_screen.dart';
-import  '../../listings/devicelistdetails.dart';
+import  '../../../listings/devicelistdetails.dart';
 
 class RenterHome extends StatefulWidget {
   const RenterHome({super.key});

@@ -1,10 +1,9 @@
 //rentee.dart
 import 'package:flutter/material.dart';
-import '../home/home_roles/role_switch_bottom_sheet.dart';
 import '../home/home_roles/rentee_home.dart';
 import '../home/home_roles/role_navbar.dart';
-import '../profile/rentee_profile.dart';
-import '../listings/createlist.dart';
+import '../../profile/rentee_profile.dart';
+import '../../listings/createlist.dart';
 import '../home/renter.dart';    // important
 
 class RenteeMain extends StatefulWidget {

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../home/home_roles/role_switch_bottom_sheet.dart';
 import '../home/home_roles/renter_home.dart';
 import '../home/home_roles/rentee_home.dart';
-import '../cart/renting_cart.dart';
-import '../profile/renter_profile.dart';
+import '../../cart/renting_cart.dart';
+import '../../profile/renter_profile.dart';
 import '../home/home_roles/role_navbar.dart';
-import '../updates/notifications_screen.dart';
+import '../../updates/notifications_screen.dart';
 import '../home/rentee.dart';    // important
 
 class RenterMain extends StatefulWidget {

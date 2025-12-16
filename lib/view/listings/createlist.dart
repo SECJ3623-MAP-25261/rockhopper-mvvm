@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Add this
 import 'package:geolocator/geolocator.dart';
 import 'package:pinjamtech_app/models/device_model.dart';
-import 'package:pinjamtech_app/view/home/home_roles/rentee_home.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import '../home/rentee.dart';
+import '../auth/home/rentee.dart';
 import 'package:path/path.dart' as p;
 
 class CreateList extends StatefulWidget {

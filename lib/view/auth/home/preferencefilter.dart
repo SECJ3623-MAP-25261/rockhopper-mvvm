@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Add this
-import '../profile/edit_profile.dart';
+import '../../profile/edit_profile.dart';
 import '../home/home_roles/choose_rolescreen.dart';
+import 'package:flutter/material.dart';
 
 class PreferenceFilteredScreen extends StatelessWidget {
   // Consistent colors
