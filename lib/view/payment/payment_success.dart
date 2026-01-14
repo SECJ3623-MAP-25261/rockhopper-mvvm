@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../listings/order_listing.dart';
+import '../cart/bookinglistscreen.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
   const PaymentSuccessScreen({super.key});
@@ -25,10 +25,8 @@ class PaymentSuccessScreen extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const OrderListing(
-                        orders: const [],   // placeholder list
-          initialIndex: 0,
-                      )),
+                    builder: (context) => const BookingListScreen(),
+                  ),
                 );
               },
               child: const Text('Go to My Orders'),

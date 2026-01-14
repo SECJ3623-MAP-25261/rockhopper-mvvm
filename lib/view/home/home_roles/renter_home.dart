@@ -101,14 +101,8 @@ class _RenterHomeUI extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ProductDetailPage(
-              device: {
-                "name": device.name,
-                "pricePerDay": device.pricePerDay,
-                "description": device.description,
-                "image": device.imageUrl,
-              },
-            ),
+            builder: (_) => ProductDetailPage(device: device),
+
           ),
         );
       },

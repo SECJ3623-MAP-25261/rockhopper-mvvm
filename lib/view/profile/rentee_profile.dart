@@ -7,6 +7,7 @@ import '../auth/welcome_screen.dart';
 import 'edit_profile.dart';
 import 'package:pinjamtech_app/view_model/renteeprofile_viewmodel.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'renteechart.dart';
 
 class RenteeProfile extends StatelessWidget {
   const RenteeProfile({super.key});
@@ -156,9 +157,16 @@ class _RenteeProfileUI extends StatelessWidget {
                 _buildMenuItem(
                   icon: Icons.description,
                   iconColor: RenteeProfile.primaryGreen,
-                  title: 'About Me',
+                  title: 'Rentee Activity Insight',
                   subtitle: bio,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RenteeChartScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 _buildMenuItem(

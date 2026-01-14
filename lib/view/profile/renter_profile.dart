@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/profile_model.dart';
+import 'renter_chart.dart';
 import '../../view/settings/settings.dart';
 
 class RenterProfile extends StatefulWidget {
@@ -116,8 +117,15 @@ class _RenterProfileState extends State<RenterProfile> {
                 _buildMenuItem(
                   icon: Icons.location_on_outlined,
                   iconColor: primaryBlue,
-                  title: 'Set Radius',
-                  onTap: () {},
+                  title: 'Renter Activity Insight',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RenterChartScreen(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 _buildMenuItem(

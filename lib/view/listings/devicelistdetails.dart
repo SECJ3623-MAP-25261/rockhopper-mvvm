@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../cart/renting_cart.dart';
 import 'package:pinjamtech_app/models/device_model.dart';
+import '../cart/add_cart.dart';
+import 'package:intl/intl.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  final Map<String, dynamic> device;
+  final Device device;
 
   const ProductDetailPage({super.key, required this.device});
 
@@ -19,258 +17,152 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   DateTime? startDate;
   DateTime? endDate;
 
-  final Color primaryBlue = const Color(0xFF2196F3);
-
   @override
   Widget build(BuildContext context) {
     final device = widget.device;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(device["name"], style: GoogleFonts.poppins()),
-        backgroundColor: primaryBlue,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: Text(device.name)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // DEVICE IMAGE
             ClipRRect(
               borderRadius: BorderRadius.circular(18),
               child: Image.network(
-                device["image"],
+                device.imageUrl,
                 height: 240,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 240,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.device_unknown, size: 80),
+                  );
+                },
               ),
             ),
-
             const SizedBox(height: 20),
 
-            // NAME + PRICE 
-            Text(
-              device["name"],
-              style: GoogleFonts.poppins(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-
+            // NAME & PRICE
+            Text(device.name,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-
-            Text(
-              "RM ${device["pricePerDay"] ?? device["price_per_day"]}/day",
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: primaryBlue,
-              ),
-            ),
-
-            const SizedBox(height: 20),
+            Text('Price: RM ${device.pricePerDay.toStringAsFixed(2)}/day',
+                style: const TextStyle(fontSize: 18, color: Colors.blue)),
+            const SizedBox(height: 10),
 
             // DESCRIPTION
-            Text(
-              device["description"],
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
-            ),
-
-            const SizedBox(height: 20),
+            Text(device.description),
+            const SizedBox(height: 10),
 
             // LOCATION
-            if (device["location"] != null && device["location"].toString().isNotEmpty) ...[
-              Text("Pickup Location", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on, size: 20, color: Colors.blue[700]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        device["location"],
-                        style: GoogleFonts.poppins(fontSize: 14, color: Colors.blue[700]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            // QUANTITY SELECTOR
-            Text("Quantity", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    if (quantity > 1) setState(() => quantity--);
-                  },
-                  icon: const Icon(Icons.remove_circle),
-                ),
-                Text(
-                  quantity.toString(),
-                  style: GoogleFonts.poppins(fontSize: 18),
-                ),
-                IconButton(
-                  onPressed: () {
-                    setState(() => quantity++);
-                  },
-                  icon: const Icon(Icons.add_circle),
-                ),
-              ],
-            ),
-
+            Text('Location: ${device.location ?? "N/A"}'),
             const SizedBox(height: 20),
 
             // DATE PICKER
-            Text("Rental Duration", style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-
+            Text('Select Rental Dates', style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
             GestureDetector(
-              onTap: pickDates,
+              onTap: () async {
+                final picked = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                  initialDateRange: startDate != null && endDate != null
+                      ? DateTimeRange(start: startDate!, end: endDate!)
+                      : null,
+                );
+
+                if (picked != null) {
+                  setState(() {
+                    startDate = picked.start;
+                    endDate = picked.end;
+                  });
+                }
+              },
               child: Container(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_month, color: Colors.black54),
+                    const Icon(Icons.calendar_month),
                     const SizedBox(width: 10),
                     Text(
-                      startDate == null
-                          ? "Select rental dates"
-                          : "${DateFormat('dd MMM yyyy').format(startDate!)} → ${DateFormat('dd MMM yyyy').format(endDate!)}",
-                      style: GoogleFonts.poppins(fontSize: 14),
+                      startDate == null || endDate == null
+                          ? 'Select rental dates'
+                          : '${DateFormat('dd MMM yyyy').format(startDate!)} → ${DateFormat('dd MMM yyyy').format(endDate!)}',
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 20),
 
-            const SizedBox(height: 40),
+            // QUANTITY SELECTOR
+            Row(
+              children: [
+                const Text('Quantity:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle),
+                  onPressed: quantity > 1 ? () => setState(() => quantity--) : null,
+                ),
+                Text(quantity.toString(), style: const TextStyle(fontSize: 16)),
+                IconButton(
+                  icon: const Icon(Icons.add_circle),
+                  onPressed: () => setState(() => quantity++),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
 
             // ADD TO CART BUTTON
             SizedBox(
               width: double.infinity,
-              height: 55,
+              height: 50,
               child: ElevatedButton(
+                onPressed: () {
+                  if (startDate == null || endDate == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please select rental dates")),
+                    );
+                    return;
+                  }
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddToCartScreen(
+                        device: device,
+                        startDate: startDate!,
+                        endDate: endDate!,
+                        quantity: quantity,
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryBlue,
+                  backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                onPressed: _addToCart,
-                child: Text(
+                child: const Text(
                   "Add to Cart",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
             ),
-
-            const SizedBox(height: 30),
           ],
         ),
       ),
     );
-  }
-
-  // PICK RENTAL DATES
-  Future<void> pickDates() async {
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-
-    if (picked != null) {
-      setState(() {
-        startDate = picked.start;
-        endDate = picked.end;
-      });
-    }
-  }
-
-  // ADD ITEM TO CART
-  Future<void> _addToCart() async {
-    if (startDate == null || endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select rental dates")),
-      );
-      return;
-    }
-
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("You must be logged in")),
-        );
-        return;
-      }
-
-      // Get or create cart
-      final cartResponse = await Supabase.instance.client
-          .from('carts')
-          .select('id')
-          .eq('renter_id', user.id)
-          .single()
-          .maybeSingle();
-
-      String cartId;
-      if (cartResponse != null && cartResponse['id'] != null) {
-        cartId = cartResponse['id'];
-      } else {
-        final newCart = await Supabase.instance.client
-            .from('carts')
-            .insert({'renter_id': user.id})
-            .select('id')
-            .single();
-        cartId = newCart['id'];
-      }
-
-      // Insert into cart_items
-      await Supabase.instance.client.from('cart_items').insert({
-        'cart_id': cartId,
-        'listing_id': widget.device['id'],
-        'start_date': startDate!.toIso8601String(),
-        'end_date': endDate!.toIso8601String(),
-        'quantity': quantity,
-        'location': widget.device['location'], // ✅ Include location
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Added to Cart")),
-      );
-
-      // Navigate to RentingCartScreen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const RentingCartScreen()),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to add to cart: $e")),
-      );
-    }
   }
 }
