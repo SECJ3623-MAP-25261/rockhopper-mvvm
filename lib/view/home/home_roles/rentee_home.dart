@@ -5,7 +5,6 @@ import '../../../models/device_model.dart';
 import 'package:pinjamtech_app/view_model/rentee_home_viewmodel.dart';
 import '../../listings/createlist.dart';
 import '../../listings/edit_listing.dart';
-import '../../listings/delete_listing.dart';
 import '../search_screen.dart';
 import '../message/rentee_chat_list_screen.dart';
 

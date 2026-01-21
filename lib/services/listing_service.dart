@@ -7,62 +7,63 @@ class ListingService {
   /// ===============================
   /// CREATE LISTING
   /// ===============================
-  Future<void> createListing(Device device) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not logged in');
+ Future<void> createListing(Device device) async {
+  final userId = _supabase.auth.currentUser?.id;
+  if (userId == null) throw Exception('User not logged in');
 
-    await _supabase.from('listings').insert({
-      'id': device.id,
-      'name': device.name,
-      'brand': device.brand,
-      'price_per_day': device.pricePerDay,
-      'deposit': device.deposit,
-      'category': device.category,
-      'condition': device.condition,
-      'is_available': device.isAvailable,
-      'max_rental_days': device.maxRentalDays,
-      'description': device.description,
-      'specifications': device.specifications,
-      'location': device.location,
-      'image_url': device.imageUrl,
-      'booked_slots': device.bookedSlots,
-      'user_id': userId,
-    });
-  }
+  await _supabase.from('listings').insert({
+    'id': device.id,
+    'name': device.name,
+    'brand': device.brand,
+    'price_per_day': device.pricePerDay,
+    'deposit': device.deposit,
+    'category': device.category,
+    'condition': device.condition,
+    'is_available': device.isAvailable,
+    'max_rental_days': device.maxRentalDays,
+    'description': device.description,
+    'specifications': device.specifications,
+    'location': device.location,
+    'image_url': device.imageUrl,
+    'booked_slots': device.bookedSlots,
+    'rentee_id': userId, // ✅ updated here
+  });
+}
 
   /// ===============================
   /// FETCH DEVICES BY CURRENT USER
   /// (Rentee listings)
   /// ===============================
-  Future<List<Device>> fetchDevicesByCurrentUser() async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return [];
+Future<List<Device>> fetchDevicesByCurrentUser() async {
+  final userId = _supabase.auth.currentUser?.id;
+  if (userId == null) return [];
 
-    final response = await _supabase
-        .from('listings')
-        .select()
-        .eq('user_id', userId);
+  final response = await _supabase
+      .from('listings')
+      .select()
+      .eq('rentee_id', userId); // ✅ updated here
 
-    return (response as List)
-        .map((item) => DeviceMapper.fromMap(item))
-        .toList();
-  }
+  return (response as List)
+      .map((item) => DeviceMapper.fromMap(item))
+      .toList();
+}
 
   /// ===============================
   /// FETCH DEVICES BY USER ID
   /// ===============================
-  Future<List<Device>> fetchDevicesByUser(String? userId) async {
-    if (userId == null) return [];
+ Future<List<Device>> fetchDevicesByUser(String? userId) async {
+  if (userId == null) return [];
 
-    final response = await _supabase
-        .from('listings')
-        .select()
-        .eq('user_id', userId);
+  final response = await _supabase
+      .from('listings')
+      .select()
+      .eq('rentee_id', userId); // ✅ updated here
 
-    return (response as List)
-        .map((item) => DeviceMapper.fromMap(item))
-        .toList();
-  }
+  return (response as List)
+      .map((item) => DeviceMapper.fromMap(item))
+      .toList();
+}
+
 
   /// ===============================
   /// FETCH AVAILABLE DEVICES
@@ -82,14 +83,15 @@ class ListingService {
   /// ===============================
   /// DELETE DEVICE (Owner only)
   /// ===============================
-  Future<void> deleteDevice(String deviceId) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return;
+Future<void> deleteDevice(String deviceId) async {
+  final userId = _supabase.auth.currentUser?.id;
+  if (userId == null) return;
 
-    await _supabase
-        .from('listings')
-        .delete()
-        .eq('id', deviceId)
-        .eq('user_id', userId);
-  }
+  await _supabase
+      .from('listings')
+      .delete()
+      .eq('id', deviceId)
+      .eq('rentee_id', userId); // ✅ updated here
+}
+
 }

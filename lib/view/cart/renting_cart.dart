@@ -1,127 +1,92 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../payment/make_payment.dart';
 import 'package:pinjamtech_app/view_model/cart_viewmodel.dart';
+import '../payment/make_payment.dart';
 
-class RentingCartScreen extends StatelessWidget {
-  const RentingCartScreen({super.key});
-
-  static const Color primaryBlue = Color(0xFF2196F3);
-  static const Color primaryGreen = Color(0xFF4CAF50);
-  static const Color textDark = Color(0xFF212121);
-  static const Color textLight = Color(0xFF757575);
-  static const Color background = Color(0xFFF5F5F5);
+class CartScreen extends StatelessWidget {
+  const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => RentingCartViewModel(),
-      child: const _RentingCartBody(),
-    );
-  }
-}
+      create: (_) => RentingCartViewModel()..loadCart(),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('My Cart')),
+        body: Consumer<RentingCartViewModel>(
+          builder: (context, vm, _) {
+            if (vm.isLoading) return const Center(child: CircularProgressIndicator());
 
-class _RentingCartBody extends StatelessWidget {
-  const _RentingCartBody();
+            if (vm.cartItems.isEmpty) {
+              return const Center(child: Text('Your cart is empty.'));
+            }
 
-  @override
-  Widget build(BuildContext context) {
-    final vm = context.watch<RentingCartViewModel>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'My Renting Cart',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: RentingCartScreen.primaryBlue,
-      ),
-      backgroundColor: RentingCartScreen.background,
-      body: vm.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : vm.cartItems.isEmpty
-              ? Center(
-                  child: Text(
-                    'Your cart is empty',
-                    style: GoogleFonts.poppins(
-                        color: RentingCartScreen.textLight),
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: vm.cartItems.length,
+                    itemBuilder: (context, index) {
+                      final item = vm.cartItems[index];
+                      final listing = item['listings'];
+                      return ListTile(
+                        title: Text(listing?['name'] ?? 'Unknown'),
+                        subtitle: Text(
+                          'Price: RM${listing?['price_per_day'] ?? 0} x ${item['rental_days']} days = RM${(listing?['price_per_day'] ?? 0) * (item['rental_days'] ?? 1)}',
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () async {
+                            await vm.removeItem(item['id']);
+                          },
+                        ),
+                        leading: Checkbox(
+                          value: item['selected'] ?? false,
+                          onChanged: (val) {
+                            vm.toggleSelection(index, val ?? false);
+                          },
+                        ),
+                      );
+                    },
                   ),
-                )
-              : Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
-                        itemCount: vm.cartItems.length,
-                        itemBuilder: (context, index) {
-                          final item = vm.cartItems[index];
-                          final listing = item['listings'];
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text('Total: RM${vm.totalPrice.toStringAsFixed(2)}'),
+                      const SizedBox(height: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          final selectedItems = vm.cartItems
+                              .where((e) => e['selected'] == true)
+                              .toList();
+                          if (selectedItems.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Select at least one item')),
+                            );
+                            return;
+                          }
 
-                          return Card(
-                            child: ListTile(
-                              leading: Checkbox(
-                                value: item['selected'],
-                                onChanged: (v) =>
-                                    vm.toggleSelection(index, v ?? false),
-                              ),
-                              title: Text(listing['name']),
-                              subtitle:
-                                  Text(listing['description'] ?? ''),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.red),
-                                onPressed: () =>
-                                    vm.removeItem(item['id']),
+                          // Navigate to MakePaymentScreen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MakePaymentScreen(
+                                totalPrice: vm.totalPrice,
                               ),
                             ),
                           );
                         },
+                        child: const Text('Checkout'),
                       ),
-                    ),
-
-                    // Total
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('Total'),
-                              Text(
-                                'RM ${vm.totalPrice.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: RentingCartScreen.primaryGreen,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: vm.totalPrice == 0
-                                ? null
-                                : () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            MakePaymentScreen(
-                                          totalPrice: vm.totalPrice,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            child: const Text('Proceed to Booking'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
