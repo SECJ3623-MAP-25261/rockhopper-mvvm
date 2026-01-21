@@ -51,7 +51,7 @@ class EditListingViewModel extends ChangeNotifier {
 
   Future<void> saveChanges(BuildContext context) async {
     try {
-      await _service.updateListing(device);
+      await _service.updateDevice(device);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("${device.name} updated successfully"), backgroundColor: Colors.green),
       );
