@@ -1,7 +1,12 @@
 // screens/notifications_screen.dart
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Add this
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Add this
 import '../../models/cart_item.dart';
+import '../../models/notification_model.dart';
+import '../../view_model/notification_viewmodel.dart'; // Add this
+
 
 class NotificationsScreen extends StatefulWidget {
   final List<CartItem> cartItems;
@@ -23,103 +28,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   static const Color textLight = Color(0xFF757575);
   static const Color background = Color(0xFFF5F5F5);
 
-  // Simulated notification data based on cart items
-  final List<Map<String, dynamic>> _notifications = [];
-
   @override
   void initState() {
     super.initState();
-    _generateNotifications();
+    // Initialize notifications from Supabase
+    _initializeNotifications();
   }
 
-  void _generateNotifications() {
-    // Clear existing notifications
-    _notifications.clear();
+  void _initializeNotifications() {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final notificationVM = context.read<NotificationViewModel>();
 
-    // Generate notifications for each cart item
-    for (final item in widget.cartItems) {
-      final now = DateTime.now();
-      
-      // Notification 1: Item added to cart
-      _notifications.add({
-        'id': 'cart-${item.id}',
-        'title': 'Added to Cart',
-        'message': '${item.name} has been added to your renting cart',
-        'time': now.subtract(const Duration(minutes: 5)),
-        'isRead': false,
-        'icon': Icons.shopping_cart,
-        'color': Colors.blue,
-        'cartItemId': item.id,
+         // USE NAMED PARAMETERS with context
+      notificationVM.initialize(
+        userId: user.id,
+        context: context, // Add this!
+      );
+        
       });
-
-      // Notification 2: Rental dates selected
-      _notifications.add({
-        'id': 'dates-${item.id}',
-        'title': 'Dates Selected',
-        'message': '${item.name}: ${item.startDate.day}/${item.startDate.month} - ${item.endDate.day}/${item.endDate.month}',
-        'time': now.subtract(const Duration(hours: 2)),
-        'isRead': true,
-        'icon': Icons.calendar_today,
-        'color': Colors.green,
-        'cartItemId': item.id,
-      });
-
-      // Notification 3: Price alert for expensive items
-      if (item.price > 15) {
-        _notifications.add({
-          'id': 'price-${item.id}',
-          'title': 'Premium Device',
-          'message': '${item.name} is priced at RM${item.price.toStringAsFixed(2)}/day',
-          'time': now.subtract(const Duration(days: 1)),
-          'isRead': false,
-          'icon': Icons.attach_money,
-          'color': Colors.orange,
-          'cartItemId': item.id,
-          'price': item.price,
-        });
-      }
-
-      // Notification 4: Rental period info
-      final rentalDays = item.rentalDays;
-      if (rentalDays > 7) {
-        _notifications.add({
-          'id': 'long-rental-${item.id}',
-          'title': 'Long Rental Period',
-          'message': '${item.name} is rented for $rentalDays days',
-          'time': now.subtract(const Duration(days: 2)),
-          'isRead': true,
-          'icon': Icons.timer,
-          'color': Colors.purple,
-          'cartItemId': item.id,
-          'days': rentalDays,
-        });
-      }
     }
-
-    // Add some system notifications
-    _notifications.addAll([
-      {
-        'id': 'system-1',
-        'title': 'Welcome to PinjamTech!',
-        'message': 'Start renting devices with our easy-to-use platform',
-        'time': DateTime.now().subtract(const Duration(days: 3)),
-        'isRead': true,
-        'icon': Icons.notifications,
-        'color': Colors.red,
-      },
-      {
-        'id': 'system-2',
-        'title': 'Weekend Special',
-        'message': 'Get 10% off on all rentals this weekend',
-        'time': DateTime.now().subtract(const Duration(days: 1)),
-        'isRead': false,
-        'icon': Icons.local_offer,
-        'color': Colors.pink,
-      },
-    ]);
-
-    // Sort by time (newest first)
-    _notifications.sort((a, b) => b['time'].compareTo(a['time']));
   }
 
   String _getTimeAgo(DateTime time) {
@@ -140,371 +69,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  void _markAllAsRead() {
-    setState(() {
-      for (final notification in _notifications) {
-        notification['isRead'] = true;
-      }
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'All notifications marked as read',
-          style: GoogleFonts.poppins(),
-        ),
-        backgroundColor: primaryBlue,
-      ),
-    );
+  void _markAllAsRead(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      final notificationVM = context.read<NotificationViewModel>();
+      notificationVM.markAllAsRead(user.id);
+    }
   }
 
-  void _markAsRead(int index) {
-    setState(() {
-      _notifications[index]['isRead'] = true;
-    });
-  }
-
-  void _deleteNotification(int index) {
-    final notification = _notifications[index];
-    setState(() {
-      _notifications.removeAt(index);
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${notification['title']} dismissed',
-          style: GoogleFonts.poppins(),
-        ),
-        action: SnackBarAction(
-          label: 'Undo',
-          textColor: Colors.white,
-          onPressed: () {
-            setState(() {
-              _notifications.insert(index, notification);
-            });
-          },
-        ),
-        backgroundColor: primaryBlue,
-      ),
-    );
-  }
-
-  int get unreadCount {
-    return _notifications.where((n) => !n['isRead']).length;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: background,
-      appBar: AppBar(
-        title: Text(
-          'Notifications',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: primaryBlue,
-        foregroundColor: Colors.white,
-        actions: [
-          if (unreadCount > 0)
-            IconButton(
-              icon: const Icon(Icons.mark_email_read),
-              onPressed: _markAllAsRead,
-              tooltip: 'Mark all as read',
-            ),
-        ],
-      ),
-      body: _notifications.isEmpty
-          ? _buildEmptyState()
-          : _buildNotificationsList(),
-    );
-  }
-
-  Widget _buildNotificationsList() {
-    return Column(
-      children: [
-        // Unread count header
-        if (unreadCount > 0)
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: primaryBlue.withOpacity(0.1),
-            child: Row(
-              children: [
-                Icon(Icons.notifications_active, color: primaryBlue),
-                const SizedBox(width: 8),
-                Text(
-                  '$unreadCount unread notification${unreadCount > 1 ? 's' : ''}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: primaryBlue,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: _markAllAsRead,
-                  child: Text(
-                    'Mark all as read',
-                    style: GoogleFonts.poppins(
-                      color: primaryBlue,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        
-        // Notifications list
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: _notifications.length,
-            itemBuilder: (context, index) {
-              final notification = _notifications[index];
-              return _buildNotificationCard(notification, index);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNotificationCard(Map<String, dynamic> notification, int index) {
-    final isUnread = !notification['isRead'];
-    final icon = notification['icon'] as IconData;
-    final color = notification['color'] as Color;
-    final timeAgo = _getTimeAgo(notification['time'] as DateTime);
-
-    return Dismissible(
-      key: Key(notification['id']),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        color: Colors.red,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      onDismissed: (direction) {
-        _deleteNotification(index);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          border: isUnread 
-              ? Border.all(color: primaryBlue.withOpacity(0.3), width: 1.5)
-              : null,
-        ),
-        child: ListTile(
-          onTap: () {
-            _markAsRead(index);
-            if (notification['cartItemId'] != null) {
-              _showCartItemDetails(notification['cartItemId'] as String);
-            }
-          },
-          contentPadding: const EdgeInsets.all(16),
-          leading: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      notification['title'] as String,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: isUnread ? FontWeight.w600 : FontWeight.w500,
-                        color: textDark,
-                      ),
-                    ),
-                  ),
-                  if (isUnread)
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: primaryBlue,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                notification['message'] as String,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: textLight,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: textLight,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  timeAgo,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: textLight,
-                  ),
-                ),
-                const Spacer(),
-                // Show cart badge if related to cart item
-                if (notification['cartItemId'] != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: primaryBlue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.shopping_cart, size: 12, color: primaryBlue),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Cart',
-                          style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            color: primaryBlue,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                // Show price if available
-                if (notification['price'] != null)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: primaryGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'RM${notification['price'].toStringAsFixed(2)}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        color: primaryGreen,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          // Trailing action button
-          trailing: PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, size: 20, color: textLight),
-            onSelected: (value) {
-              if (value == 'mark_read') {
-                _markAsRead(index);
-              } else if (value == 'delete') {
-                _deleteNotification(index);
-              }
-            },
-            itemBuilder: (context) => [
-              if (isUnread)
-                PopupMenuItem<String>(
-                  value: 'mark_read',
-                  child: ListTile(
-                    leading: Icon(Icons.check_circle, size: 20, color: primaryBlue),
-                    title: Text(
-                      'Mark as read',
-                      style: GoogleFonts.poppins(),
-                    ),
-                  ),
-                ),
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: ListTile(
-                  leading: const Icon(Icons.delete, size: 20, color: Colors.red),
-                  title: Text(
-                    'Delete',
-                    style: GoogleFonts.poppins(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.notifications_none,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'No notifications',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              color: textLight,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              'Add items to your cart to receive notifications about your rentals',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                color: textLight,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCartItemDetails(String cartItemId) {
+  void _showCartItemDetails(BuildContext context, String cartItemId) {
     final cartItem = widget.cartItems.firstWhere(
       (item) => item.id == cartItemId,
       orElse: () => CartItem(
@@ -617,6 +190,375 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ],
       )
+    );
+  }
+
+  IconData _getIconForType(String type) {
+    if (type.contains('booking')) {
+      return Icons.calendar_today;
+    } else if (type.contains('reminder')) {
+      return Icons.alarm;
+    } else if (type.contains('pickup')) {
+      return Icons.airport_shuttle;
+    } else if (type.contains('return')) {
+      return Icons.keyboard_return;
+    }
+    return Icons.notifications;
+  }
+
+  Color _getColorForType(String type) {
+    if (type.contains('booking')) {
+      return Colors.green;
+    } else if (type.contains('reminder')) {
+      return Colors.orange;
+    } else if (type.contains('pickup')) {
+      return Colors.blue;
+    } else if (type.contains('return')) {
+      return Colors.red;
+    }
+    return Colors.blue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NotificationViewModel>(
+      builder: (context, notificationVM, child) {
+        final notifications = notificationVM.notifications;
+        
+        return Scaffold(
+          backgroundColor: background,
+          appBar: AppBar(
+            title: Text(
+              'Notifications',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: primaryBlue,
+            foregroundColor: Colors.white,
+            actions: [
+              if (notificationVM.unreadCount > 0)
+                IconButton(
+                  icon: const Icon(Icons.mark_email_read),
+                  onPressed: () => _markAllAsRead(context),
+                  tooltip: 'Mark all as read',
+                ),
+            ],
+          ),
+          body: notificationVM.isLoading && notifications.isEmpty
+              ? _buildLoadingState()
+              : notifications.isEmpty
+                  ? _buildEmptyState()
+                  : _buildNotificationsList(context, notificationVM),
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.notifications_none,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'No notifications',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              color: textLight,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Add items to your cart to receive notifications about your rentals',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: textLight,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsList(
+      BuildContext context, NotificationViewModel notificationVM) {
+    final notifications = notificationVM.notifications;
+
+    return Column(
+      children: [
+        // Unread count header
+        if (notificationVM.unreadCount > 0)
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: primaryBlue.withOpacity(0.1),
+            child: Row(
+              children: [
+                Icon(Icons.notifications_active, color: primaryBlue),
+                const SizedBox(width: 8),
+                Text(
+                  '${notificationVM.unreadCount} unread notification${notificationVM.unreadCount > 1 ? 's' : ''}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: primaryBlue,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => _markAllAsRead(context),
+                  child: Text(
+                    'Mark all as read',
+                    style: GoogleFonts.poppins(
+                      color: primaryBlue,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        
+        // Notifications list
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              final user = Supabase.instance.client.auth.currentUser;
+              if (user != null) {
+                await notificationVM.initialize(
+                   userId: user.id,
+                   context: context);
+              }
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                return _buildNotificationCard(context, notification, index, notificationVM);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotificationCard(
+      BuildContext context,
+      NotificationModel notification,
+      int index,
+      NotificationViewModel notificationVM) {
+    
+    final isUnread = !notification.isRead;
+    final icon = _getIconForType(notification.type);
+    final color = _getColorForType(notification.type);
+    final timeAgo = _getTimeAgo(notification.createdAt);
+
+    return Dismissible(
+      key: Key(notification.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: Colors.red,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      onDismissed: (direction) {
+        notificationVM.deleteNotification(notification.id);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: isUnread 
+              ? Border.all(color: primaryBlue.withOpacity(0.3), width: 1.5)
+              : null,
+        ),
+        child: ListTile(
+          onTap: () {
+            notificationVM.markAsRead(notification.id);
+            // Handle notification tap based on data
+            if (notification.data?['action'] == 'view_booking') {
+              // Navigate to booking details
+            }
+          },
+          contentPadding: const EdgeInsets.all(16),
+          leading: Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      notification.title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: isUnread ? FontWeight.w600 : FontWeight.w500,
+                        color: textDark,
+                      ),
+                    ),
+                  ),
+                  if (isUnread)
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: primaryBlue,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                notification.body,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: textLight,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.access_time,
+                  size: 14,
+                  color: textLight,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  timeAgo,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: textLight,
+                  ),
+                ),
+                const Spacer(),
+                // Show booking badge if related to booking
+                if (notification.orderId != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.book_online, size: 12, color: primaryBlue),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Booking',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            color: primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                // Show total price if available in data
+                if (notification.data?['total_price'] != null)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: primaryGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'RM${notification.data!['total_price']}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        color: primaryGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Trailing action button
+          trailing: PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert, size: 20, color: textLight),
+            onSelected: (value) {
+              if (value == 'mark_read') {
+                notificationVM.markAsRead(notification.id);
+              } else if (value == 'delete') {
+                notificationVM.deleteNotification(notification.id);
+              }
+            },
+            itemBuilder: (context) => [
+              if (isUnread)
+                PopupMenuItem<String>(
+                  value: 'mark_read',
+                  child: ListTile(
+                    leading: Icon(Icons.check_circle, size: 20, color: primaryBlue),
+                    title: Text(
+                      'Mark as read',
+                      style: GoogleFonts.poppins(),
+                    ),
+                  ),
+                ),
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: ListTile(
+                  leading: const Icon(Icons.delete, size: 20, color: Colors.red),
+                  title: Text(
+                    'Delete',
+                    style: GoogleFonts.poppins(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

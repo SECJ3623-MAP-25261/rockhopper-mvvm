@@ -93,5 +93,30 @@ Future<void> deleteDevice(String deviceId) async {
       .eq('id', deviceId)
       .eq('rentee_id', userId); // ✅ updated here
 }
+Future<void> updateDevice(Device device) async {
+  final userId = _supabase.auth.currentUser?.id;
+  if (userId == null) throw Exception('User not logged in');
+
+  await _supabase
+      .from('listings')
+      .update({
+        'name': device.name,
+        'brand': device.brand,
+        'price_per_day': device.pricePerDay,
+        'deposit': device.deposit,
+        'category': device.category,
+        'condition': device.condition,
+        'is_available': device.isAvailable,
+        'max_rental_days': device.maxRentalDays,
+        'description': device.description,
+        'specifications': device.specifications,
+        'location': device.location,
+        'image_url': device.imageUrl,
+        'booked_slots': device.bookedSlots,
+        'updated_at': DateTime.now().toIso8601String(), // Add update timestamp
+      })
+      .eq('id', device.id)
+      .eq('rentee_id', userId); // Ensure only owner can update
+}
 
 }

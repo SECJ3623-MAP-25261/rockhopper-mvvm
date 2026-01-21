@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pinjamtech_app/view_model/auth_viewmodel.dart';
+import 'package:pinjamtech_app/view_model/notification_viewmodel.dart';
 import 'forgot_password.dart';
 import '../home/preferencefilter.dart';
 
@@ -34,6 +36,17 @@ Future<void> _handleLogin() async {
   }
 
   if (!mounted) return;
+
+    // IMPORTANT: Get user ID and initialize notifications
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user != null) {
+    // Initialize notifications for this user
+    final notificationVM = context.read<NotificationViewModel>();
+    notificationVM.initialize(
+      userId: user.id,
+      context: context,
+      );
+  }
 
   Navigator.pushReplacement(
     context,
