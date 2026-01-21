@@ -14,7 +14,7 @@ class RenterProfile extends StatefulWidget {
 class _RenterProfileState extends State<RenterProfile> {
   // Colors from your design system
   static const Color primaryBlue = Color(0xFF2196F3);
-  static const Color primaryGreen = Color(0xFF4CAF50);
+  //static const Color primaryGreen = Color(0xFF4CAF50);
   static const Color textDark = Color(0xFF212121);
   static const Color textLight = Color(0xFF757575);
   static const Color background = Color(0xFFF5F5F5);

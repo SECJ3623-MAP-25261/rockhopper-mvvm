@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../view_model/renterchart_viewmodel.dart';
-import '../../view_model/chart_ui_data.dart';
 
 class RenterChartScreen extends StatelessWidget {
   const RenterChartScreen({super.key});

@@ -14,7 +14,7 @@ class _OtpScreenState extends State<OtpScreen> {
   final auth = AuthService();
 
   void handleSendOtp() async {
-    await auth.sendOtp(_emailController.text);
+    //await auth.sendOtp(_emailController.text);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Check your email for the login link")),
