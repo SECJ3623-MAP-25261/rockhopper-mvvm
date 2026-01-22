@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pinjamtech_app/models/device_model.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import '../managers/offline_manager.dart';
 
 class CreateListingViewModel extends ChangeNotifier {
   // Controllers
@@ -259,24 +260,30 @@ class CreateListingViewModel extends ChangeNotifier {
 
 // ============ RESULT CLASSES ============
 enum LocationResult {
-  success,
-  serviceDisabled,
-  permissionDenied,
-  permissionDeniedForever,
-  error,
-}
+    success,
+    serviceDisabled,
+    permissionDenied,
+    permissionDeniedForever,
+    error,
+  }
 
-class ValidationResult {
-  final bool isValid;
-  final String message;
+  class ValidationResult {
+    final bool isValid;
+    final String message;
 
-  ValidationResult(this.isValid, this.message);
-}
+    ValidationResult(this.isValid, this.message);
+  }
 
-class PublishResult {
-  final bool success;
-  final String message;
-  final Device? device;
+  class PublishResult {
+    final bool success;
+    final String message;
+    final Device? device;
+    final bool? offline;
+    final int? localId;
 
-  PublishResult(this.success, this.message, {this.device});
+    PublishResult(this.success, this.message, {
+      this.device,
+      this.offline = false,
+      this.localId,
+    });
 }

@@ -56,6 +56,7 @@ class _RenteeMainUI extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: vm.currentIndex,
         onTap: vm.changeTab,
+        // onRoleSwitch: _switchToRentee,
         type: BottomNavigationBarType.fixed,
         items: [
           const BottomNavigationBarItem(

@@ -8,6 +8,8 @@ import 'edit_profile.dart';
 import 'package:pinjamtech_app/view_model/renteeprofile_viewmodel.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'renteechart.dart';
+import 'bookinghub.dart';
+
 
 class RenteeProfile extends StatelessWidget {
   const RenteeProfile({super.key});
@@ -140,18 +142,19 @@ class _RenteeProfileUI extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 12),
-                _buildMenuItem(
-                  icon: Icons.phone,
+                  _buildMenuItem(
+                  icon: Icons.description,
                   iconColor: RenteeProfile.primaryGreen,
-                  title: 'Phone: $phone',
-                  onTap: () {},
-                ),
-                const SizedBox(height: 12),
-                _buildMenuItem(
-                  icon: Icons.person,
-                  iconColor: RenteeProfile.primaryGreen,
-                  title: 'Gender: $gender',
-                  onTap: () {},
+                  title: 'Booking hub',
+                  subtitle: bio,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BookingHub(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 _buildMenuItem(

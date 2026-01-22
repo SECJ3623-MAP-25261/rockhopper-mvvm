@@ -1,6 +1,6 @@
-// device_model.dart
 class Device {
-  final String id;
+  final String id; 
+  final String? ownerId;
   final String name;
   final String brand;
   final double pricePerDay;
@@ -16,7 +16,8 @@ class Device {
   final String? location;
 
   Device({
-    required this.id,
+    required this.id,  
+    this.ownerId,
     required this.name,
     required this.brand,
     required this.pricePerDay,
@@ -32,24 +33,29 @@ class Device {
     this.location,
   });
 
+  /// ===============================
+  /// COPY WITH (IMMUTABLE UPDATE)
+  /// ===============================
   Device copyWith({
-    String? id,
+    String? id,  
+    String? ownerId,
     String? name,
-    String? brand,
     double? pricePerDay,
-    String? imageUrl,
     bool? isAvailable,
-    int? maxRentalDays,
-    String? condition,
     String? description,
-    String? category,
     List<DateTime>? bookedSlots,
+    String? imageUrl,
     double? deposit,
     String? specifications,
     String? location,
+    int? maxRentalDays,
+    String? condition,
+    String? category,
+    String? brand,
   }) {
     return Device(
-      id: id ?? this.id,
+      id: id ?? this.id,  
+      ownerId: ownerId ?? this.ownerId, 
       name: name ?? this.name,
       brand: brand ?? this.brand,
       pricePerDay: pricePerDay ?? this.pricePerDay,
@@ -65,26 +71,64 @@ class Device {
       location: location ?? this.location,
     );
   }
-}
 
-// Extension Mapper
-extension DeviceMapper on Device {
-  static Device fromMap(Map<String, dynamic> item) => Device(
-        id: item['id'].toString(),
-        name: item['name'] ?? '',
-        brand: item['brand'] ?? '',
-        pricePerDay: (item['price_per_day'] ?? 0).toDouble(),
-        imageUrl: item['image_url'] ?? '',
-        isAvailable: item['is_available'] ?? true,
-        maxRentalDays: item['max_rental_days'] ?? 0,
-        condition: item['condition'] ?? '',
-        description: item['description'] ?? '',
-        category: item['category'] ?? '',
-        bookedSlots: (item['booked_slots'] as List<dynamic>? ?? [])
-            .map((e) => DateTime.parse(e))
-            .toList(),
-        deposit: (item['deposit'] as num?)?.toDouble(),
-        specifications: item['specifications'] ?? '',
-        location: item['location'] ?? '',
-      );
+  /// ===============================
+  /// FROM MAP (FACTORY CONSTRUCTOR)
+  /// ===============================
+  factory Device.fromMap(Map<String, dynamic> map) {
+    return Device(
+      id: map['id']?.toString() ?? '',  
+      ownerId: map['user_id']?.toString(),
+      name: map['name']?.toString() ?? '',
+      brand: map['brand']?.toString() ?? '',
+      pricePerDay: (map['price_per_day'] as num?)?.toDouble() ?? 0.0,
+      imageUrl: map['image_url']?.toString() ?? '',
+      isAvailable: map['is_available'] ?? true,
+      maxRentalDays: (map['max_rental_days'] as num?)?.toInt() ?? 0,
+      condition: map['condition']?.toString() ?? '',
+      description: map['description']?.toString() ?? '',
+      category: map['category']?.toString() ?? '',
+      bookedSlots: (map['booked_slots'] as List<dynamic>? ?? [])
+          .map((e) => DateTime.parse(e.toString()))
+          .toList(),
+      deposit: (map['deposit'] as num?)?.toDouble(),
+      specifications: map['specifications']?.toString(),
+      location: map['location']?.toString(),
+    );
+  }
+
+  /// ===============================
+  /// TO MAP (FOR SUPABASE)
+  /// ===============================
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'user_id': ownerId,
+      'name': name,
+      'brand': brand,
+      'price_per_day': pricePerDay,
+      'image_url': imageUrl,
+      'is_available': isAvailable,
+      'max_rental_days': maxRentalDays,
+      'condition': condition,
+      'description': description,
+      'category': category,
+      'booked_slots': bookedSlots.map((e) => e.toIso8601String()).toList(),
+      'deposit': deposit,
+      'specifications': specifications,
+      'location': location,
+    };
+  }
+
+  /// ===============================
+  /// EQUATABLE COMPARISON
+  /// ===============================
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Device && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
