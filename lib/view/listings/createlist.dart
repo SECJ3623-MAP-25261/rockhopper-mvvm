@@ -856,51 +856,66 @@ class _CreateListingBody extends StatelessWidget {
   }
 
   Future<void> _handlePublish(BuildContext context, CreateListingViewModel vm) async {
-    final result = await vm.publishListing();
+  final result = await vm.publishListing();
 
-    if (!context.mounted) return;
+  if (!context.mounted) return;
 
-    if (result.success) {
-      _showSnackBar(
-        context,
-        result.message,
-        CreateList.primaryGreen,
-        Icons.check_circle,
-      );
-      
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (context.mounted) {
-        Navigator.pop(context, result.device);
-      }
-    } else {
-      _showSnackBar(
-        context,
-        result.message,
-        Colors.red,
-        Icons.error_outline,
-      );
+  if (result.success) {
+    _showSnackBar(
+      context,
+      result.message,
+      result.offline == true ? Colors.orange : CreateList.primaryGreen,
+      result.offline == true ? Icons.cloud_upload : Icons.check_circle,
+    );
+   
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (context.mounted) {
+      Navigator.pop(context, result.device);
     }
-  }
-
-  void _showSnackBar(BuildContext context, String message, Color color, IconData icon) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.poppins(),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+  } else {
+    _showSnackBar(
+      context,
+      result.message,
+      Colors.red,
+      Icons.error_outline,
     );
   }
+}
+
+  void _showSnackBar(BuildContext context, String message, Color color, IconData icon) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          Icon(icon, color: Colors.white),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: GoogleFonts.poppins(color: Colors.white),
+                ),
+                if (color == Colors.orange)
+                  Text(
+                    'You can continue working offline',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: color,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      duration: Duration(seconds: color == Colors.orange ? 5 : 3),
+    ),
+  );
+}
 }
